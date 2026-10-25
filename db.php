@@ -13,7 +13,7 @@ $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, // Викидати винятки при помилка SQL
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, // Повертати дані у вигляді асоциативних масивів
-    PDO::ATTR_EMULATE_PREPARES => false // Використовувати справжніпідготовлені масиви бази
+    PDO::ATTR_EMULATE_PREPARES => false // Використовувати справжніпідготовлені вирази бази
 ];
 
 try {
@@ -22,5 +22,6 @@ try {
 } catch (\PDOException $e) {
     //У реальних проектах тут роблять логування помилки, а користувачу показують загальне повідомлення
     http_response_code(500);
-    echo json_encode(['error' => 'Помилка підключення до бази даних.']);
+    echo json_encode(['error' => 'Помилка підключення до бази даних.'], JSON_UNESCAPED_UNICODE);
+    exit;
 }
