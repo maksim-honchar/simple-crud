@@ -3,7 +3,7 @@ const todoForm = document.getElementById('todoForm');
 const taskInput = document.getElementById('taskInput');
 const todoList = document.getElementById('todoList');
 
-//Функція для завантаєення та рендерінгу задач із сервера 
+// Функція для завантаєення та рендерінгу задач із сервера 
 async function loadTodos() {
     try {
         const response = await fetch('get_todos.php');
@@ -15,15 +15,51 @@ async function loadTodos() {
         // Перебираємо масив задач і рендерим їх
         todos.forEach(todo => {
             const li = document.createElement('li');
-            li.textContent = todo.task;
+
+            // Створюємо текст задачі
+            const span = document.createElement('span');
+            span.textContent = todo.task;
+
+            // Створюємо кнопку видалення для кожної задачі
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Видалити';
+            li.appendChild(span);
+            li.appendChild(deleteBtn);
             todoList.appendChild(li);
+
+            // Вішуємо слухача подій на кнопку видалення
+            deleteBtn.addEventListener('click', function () {
+                deleteTodo(todo.id);
+            });
+
         });
     } catch (error) {
         console.error('Помилка при завантажені задач', error);
     }
 }
 
-//Викликаємо функцію одразу при завантажені сторінки
+async function deleteTodo(id) {
+    try {
+        const response = await fetch('delete_todo.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            body: JSON.stringify({ id: id })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Після успішного видалення оновлюємо список на екрані
+            await loadTodos();
+        }
+    } catch (error) {
+        console.error('Помилка при видалені', error);
+    }
+}
+
+// Викликаємо функцію одразу при завантажені сторінки
 loadTodos();
 
 // Вішаємо слухача подій на відправку форми (працює і по кліку на кнопку, і по натисканю Enter)
