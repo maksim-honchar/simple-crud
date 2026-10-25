@@ -1,9 +1,33 @@
 // Знаходимо нашу форму та поле введення за їхніми ID у HTML
 const todoForm = document.getElementById('todoForm');
 const taskInput = document.getElementById('taskInput');
+const todoList = document.getElementById('todoList');
+
+//Функція для завантаєення та рендерінгу задач із сервера 
+async function loadTodos() {
+    try {
+        const response = await fetch('get_todos.php');
+        const todos = await response.json();
+
+        // Очищаємо перед завантаженням щоб не було дублів
+        todoList.innerHTML = '';
+
+        // Перебираємо масив задач і рендерим їх
+        todos.forEach(todo => {
+            const li = document.createElement('li');
+            li.textContent = todo.task;
+            todoList.appendChild(li);
+        });
+    } catch (error) {
+        console.error('Помилка при завантажені задач', error);
+    }
+}
+
+//Викликаємо функцію одразу при завантажені сторінки
+loadTodos();
 
 // Вішаємо слухача подій на відправку форми (працює і по кліку на кнопку, і по натисканю Enter)
-todoForm.addEventListener('submit', function (event) {
+todoForm.addEventListener('submit', async function (event) {
     // Зупиняємо стандартну поведінку браузера, щоб сторінка не перезавантажувалась
     event.preventDefault();
 
@@ -15,27 +39,24 @@ todoForm.addEventListener('submit', function (event) {
         return;
     }
 
-    // Тимчасово вивидимо в браузер щоб перевірити, що все працює
-    console.log('Клієнт зібрав текст задачі: ', taskText);
+    try {
+        // Відправляємо нову задачу на сервер через fetch з await
+        const response = await fetch('add_todo.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            body: JSON.stringify({ task: taskText })
+        });
 
+        const data = await response.json();
 
-
-    // Відправляємо дані на сервер за допомогою fetch
-    fetch('add_todo.php', {
-        method: 'POST', //Метод надсилання
-        headers: {
-            'Content-Type': 'application/json; charset=utf-8' //Кажемо серверу, що відправляємо JSON
-        },
-        body: JSON.stringify({ task: taskText }) // Пакуємо наш текст у JSON-рядок {"task": "текст"}
-    })
-        .then(response => response.json()) // Чекаємо відповідь від сервера і разпаковуємо її з JSON
-        .then(data => {
-            console.log('сервер успішно відповів: ', data);
-
-            // Очищуємо полве введення після відправки
+        if (data.success) {
+            // Очищуємо поле ведення
             taskInput.value = '';
-        })
-        .catch(error => {
-            console.error('Сталася помилка: ', error);
-        })
+            await loadTodos();
+        }
+    } catch (error) {
+        console.error('Сталася помилка', error);
+    }
 })   
