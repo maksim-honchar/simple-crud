@@ -20,11 +20,39 @@ async function loadTodos() {
             const span = document.createElement('span');
             span.textContent = todo.task;
 
+            // Кнопка редагування/збереження
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Редагувати';
+
+            editBtn.addEventListener('click', async function () {
+                // Якщо кнопка в режимі "Редагування"
+                if (editBtn.textContent === 'Редагувати') {
+                    // Створюємо input для редагування
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = todo.task;
+
+                    // Замінюємо текстовий span на інпут всередені li
+                    li.replaceChild(input, span);
+                    input.focus();
+                    editBtn.textContent = 'Зберегти';
+                } else {
+                    // Якщо кнопка в режимі "Зберегти" - дістаємо значенняя з інпуту
+                    const input = li.querySelector('input');
+                    const newTaskText = input.value.trim();
+
+                    if (newTaskText !== '') {
+                        await updateTodo(todo.id, newTaskText);
+                    }
+                }
+            })
+
             // Створюємо кнопку видалення для кожної задачі
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = 'Видалити';
             li.appendChild(span);
             li.appendChild(deleteBtn);
+            li.appendChild(editBtn);
             todoList.appendChild(li);
 
             // Вішуємо слухача подій на кнопку видалення
@@ -35,6 +63,27 @@ async function loadTodos() {
         });
     } catch (error) {
         console.error('Помилка при завантажені задач', error);
+    }
+}
+
+// Функція оновлення задачі на бекенді
+async function updateTodo(id, newTask) {
+    try {
+        const response = await fetch('update_todo.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=utf-8'
+            },
+            body: JSON.stringify({ id, task: newTask })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            await loadTodos(); // Перемальовуємо актуальний список із бази
+        }
+    } catch (error) {
+        console.error('Помилка при редагуванні:', error);
     }
 }
 
